@@ -113,7 +113,7 @@ body:has(.ravera) { background: #f4f1eb; }
 .rv2-pill-link { display: inline-flex; align-items: center; justify-content: space-between; gap: 38px; border-radius: 100px; border: 1px solid var(--wine); padding: 17px 23px; text-transform: uppercase; font-size: .7rem; font-weight: 700; letter-spacing: .12em; transition: background .3s, color .3s, transform .3s; }
 .rv2-pill-link:hover { background: var(--wine); color: var(--pearl); transform: translateY(-2px); }
 .rv2-hero-art { position: relative; padding: 0 5% 30px 0; }
-.rv2-arch { border-radius: 48% 48% 3px 3px; aspect-ratio: .86; background: var(--pearl); display: grid; place-items: center; overflow: hidden; }
+.rv2-arch { border-radius: 48% 48% 3px 3px; aspect-ratio: .86; background: #e9e1d7; display: grid; place-items: center; overflow: hidden; }
 .rv2-arch .rv-logo { width: 100%; }
 .rv2-hero-note { position: absolute; right: 0; bottom: 0; writing-mode: vertical-rl; text-transform: uppercase; font-size: .6rem; letter-spacing: .2em; color: var(--gray); }
 .rv2-story { background: #ded4c9; border-radius: 50% 50% 0 0 / 7% 7% 0 0; padding-block: 115px 130px; }
