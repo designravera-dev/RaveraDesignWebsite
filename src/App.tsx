@@ -2,6 +2,7 @@ import { useState } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
+import RaveraLanding from './RaveraLandings'
 import './App.css'
 
 function App() {
@@ -119,4 +120,10 @@ function App() {
   )
 }
 
-export default App
+export default function RoutedApp() {
+  const path = window.location.pathname.replace(/\/+$/, '')
+  if (path === '/landing1') return <RaveraLanding direction={1} />
+  if (path === '/landing2') return <RaveraLanding direction={2} />
+  if (path === '/landing3') return <RaveraLanding direction={3} />
+  return <App />
+}
