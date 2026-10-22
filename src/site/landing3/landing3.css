@@ -665,43 +665,6 @@ body:has(> #root > .ts) {
   color: var(--dourado);
 }
 
-.ts-marquee {
-  overflow: hidden;
-  padding: 18px 0;
-  border-top: 1px solid var(--linha-clara);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-
-.ts-marquee-track {
-  display: flex;
-  width: max-content;
-  animation: ts-marquee 55s linear infinite;
-}
-
-.ts-marquee-group {
-  display: flex;
-}
-
-.ts-marquee span {
-  display: inline-flex;
-  align-items: center;
-  gap: 34px;
-  padding-right: 34px;
-  white-space: nowrap;
-  font-family: var(--serif);
-  font-size: 1.45rem;
-  font-style: italic;
-  color: rgba(244, 241, 235, .72);
-}
-
-.ts-marquee i {
-  width: 6px;
-  height: 6px;
-  background: var(--dourado);
-  transform: rotate(45deg);
-}
-
 /* ---------- Origem ---------- */
 
 .ts-origin {
@@ -1070,10 +1033,6 @@ body:has(> #root > .ts) {
   to { transform: rotate(360deg); }
 }
 
-@keyframes ts-marquee {
-  to { transform: translateX(-50%); }
-}
-
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 1080px) {
@@ -1216,10 +1175,6 @@ body:has(> #root > .ts) {
     display: none;
   }
 
-  .ts-marquee span {
-    font-size: 1.2rem;
-  }
-
   .ts-values li {
     grid-template-columns: 1fr;
     gap: 2px;
@@ -1275,6 +1230,5 @@ body:has(> #root > .ts) {
     transition: none !important;
   }
 }
-
 
 

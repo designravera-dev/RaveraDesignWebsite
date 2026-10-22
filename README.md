@@ -16,6 +16,8 @@ O build inclui a checagem de TypeScript. `npm test` verifica estado, persistênc
 
 Para os testes de navegador, execute o servidor de desenvolvimento (ou `npm run preview`) e use `npm run test:browser` com uma instalação existente do Playwright. O script aceita `RAVERA_PLAYWRIGHT_PATH` (caminho de `playwright/index.mjs`), `RAVERA_BROWSER_PATH` (executável do Chromium/Chrome), `RAVERA_BASE_URL` (padrão `http://127.0.0.1:5173`), `RAVERA_QA_OUTPUT` (pasta dos relatórios e capturas) e `RAVERA_REQUIRE_WEBFONTS=1` para exigir as fontes oficiais. Não foi adicionada dependência de produção ou interface.
 
+Em desenvolvimento, `RAVERA_TEST_DEV_MODULES=1` também verifica configuração ausente e desmontagem durante uma cópia pendente com uma fixture React exclusiva dos testes. O contato externo é interceptado nos testes; a cópia nativa e a abertura de abas são reais, sem enviar solicitações à loja.
+
 ## Estrutura
 
 - `src/site/landing3/`: componente, conteúdo e estilos exclusivos do site oficial.
@@ -45,6 +47,8 @@ A chave `ravera:catalog-selection:v2` em `sessionStorage` contém `{ selectedPro
 
 Os cinco nomes, resumos, materiais e dimensões vêm do catálogo inicial. As fotos usam versões WebP já existentes. Descrições com `Lorem ipsum` não são publicadas. O catálogo inicial não contém categorias associadas às peças ou filtros, por isso nenhum foi inventado.
 
-`src/site/shared/contact.ts` centraliza o contato real. O número de WhatsApp está vazio; o fluxo atual reutiliza `@ravera.designn`: gera e tenta copiar a mensagem, abre a conversa oficial do Instagram e oferece o texto completo e um link explícito no painel. O Instagram não aceita mensagem pré-preenchida pela URL; o cliente cola o texto na conversa. Caso o número oficial seja configurado, o mesmo fluxo usa a URL do WhatsApp com `encodeURIComponent`. Nenhuma mensagem é enviada automaticamente. “Solicitar orçamento” exige pelo menos uma peça; a história aparece na mensagem somente quando contém texto significativo.
+`src/site/shared/contact.ts` centraliza o contato real. “Solicitar orçamento pelo Instagram” exige pelo menos uma peça com nome válido e reutiliza `INSTAGRAM_DM_URL`, de `@ravera.designn`. No clique, `catalogQuote.ts` gera os nomes únicos na ordem de seleção e acrescenta a história significativa, sem truncá-la. A cópia começa durante o clique, e uma única aba é reservada antes de qualquer espera. Após confirmar a cópia, a aba abre o Direct com proteção de opener e referrer, e um aviso temporário explica como colar. Nenhuma mensagem é enviada automaticamente.
+
+Se a Clipboard API estiver indisponível ou negar a cópia, uma textarea temporária dentro do diálogo ativo tenta `document.execCommand('copy')` e é removida imediatamente. Se as duas tentativas falharem, a aba reservada é fechada e um diálogo acessível oferece o texto selecionável, “Copiar mensagem” e “Abrir Direct do Instagram”. Se apenas o popup falhar, a cópia é confirmada e um link de Direct permanece visível. Peças, história, badge e sessão são preservados em todos os casos. O Instagram não permite preencher o Direct pela URL: a cliente precisa colar e enviar a mensagem.
 
 O relatório de arquivos e verificações está em `docs/catalog-implementation.md`.

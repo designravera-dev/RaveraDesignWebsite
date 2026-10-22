@@ -20,7 +20,9 @@ test('catalog renders safely on the server, with empty data and optional metadat
     assert.ok(!html.includes('ts-selection-badge'))
     assert.ok(html.includes('disabled=""'))
     assert.ok(html.includes('Conte sua história'))
-    assert.ok(html.includes('Solicitar orçamento'))
+    assert.ok(html.includes('Solicitar orçamento pelo Instagram'))
+    assert.ok(html.includes('Selecione pelo menos uma peça para enviar sua solicitação.'))
+    assert.ok(!html.includes('quote-message-text'))
     assert.ok(!/R\$|Unidades selecionadas|ts-selection-quantity|Adicionar outra/.test(html))
 
     const home = renderToString(createElement(LandingThree))

@@ -5,10 +5,13 @@ import LeafIcon from './LeafIcon'
 import SelectionItem from './SelectionItem'
 import SelectionClearAction from './SelectionClearAction'
 import useCatalogQuote from './useCatalogQuote'
+import CopyStatusToast from './CopyStatusToast'
+import ManualCopyDialog from './ManualCopyDialog'
 
 export default function SelectionDrawer({ open, onClose, leafRef }: { open: boolean; onClose: () => void; leafRef: RefObject<HTMLButtonElement | null> }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const quoteRef = useRef<HTMLButtonElement>(null)
   const { selectedProductIds, story, setStory, selectedCount, storageAvailable, announcement } = useCatalogSelection()
   const quote = useCatalogQuote()
 
@@ -52,8 +55,10 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
   }, [open, leafRef])
 
   function trapFocus(event: KeyboardEvent<HTMLDialogElement>) {
+    if ((event.target as HTMLElement).closest('dialog') !== event.currentTarget) return
     if (event.key !== 'Tab') return
-    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), textarea:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]')
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), textarea:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]') ?? [])
+      .filter((element) => element.closest('dialog') === dialogRef.current && element.getClientRects().length > 0)
     if (!focusable?.length) return
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
@@ -73,7 +78,7 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
       className="ts-selection-drawer"
       aria-labelledby="ts-selection-title"
       aria-modal="true"
-      onCancel={(event) => { event.preventDefault(); onClose() }}
+      onCancel={(event) => { if (event.target === event.currentTarget) { event.preventDefault(); onClose() } }}
       onKeyDown={trapFocus}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return
@@ -87,6 +92,7 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
           <button ref={closeRef} className="ts-selection-close" type="button" onClick={onClose} aria-label="Fechar minha seleção"><span aria-hidden="true">×</span></button>
         </header>
         <div className="ts-selection-body">
+          <CopyStatusToast feedback={quote.feedback} destination={quote.destination} onDismiss={quote.dismissFeedback} />
           {selectedCount ? (
             <ul className="ts-selection-list">
               {selectedProductIds.map((id) => {
@@ -116,26 +122,15 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
             />
           </div>
           {(selectedCount > 0 || story.length > 0) && <SelectionClearAction />}
-          {quote.showMessage && quote.enabled && (
-            <section className="ts-quote-message" aria-labelledby="quote-message-title">
-              <h3 id="quote-message-title">Mensagem do orçamento</h3>
-              <p role="status" aria-live="polite" aria-atomic="true"><span key={quote.copyStatus?.version ?? 0}>
-                {quote.copyStatus?.copied ? `Mensagem copiada. Cole na conversa do ${quote.contact.channel}.` : quote.contact.prefilled ? 'Sua mensagem está pronta para enviar.' : 'Copie a mensagem abaixo e cole na conversa do Instagram.'}
-              </span></p>
-              <label className="ts-sr-only" htmlFor="quote-message-text">Texto da mensagem do orçamento</label>
-              <textarea id="quote-message-text" rows={7} readOnly value={quote.message} />
-              <button type="button" className="ts-button ts-button--wine" onClick={() => void quote.copyMessage()}>Copiar mensagem</button>
-              <a className="ts-link" href={quote.contact.href} target="_blank" rel="noopener noreferrer">Abrir conversa no {quote.contact.channel} <span aria-hidden="true">↗</span></a>
-            </section>
-          )}
         </div>
         <footer className="ts-selection-footer">
           <p className="ts-selection-summary"><span>{selectedCount === 1 ? 'Peça selecionada' : 'Peças selecionadas'}</span><strong>{selectedCount}</strong></p>
-          <button className="ts-button ts-button--wine ts-quote-action" type="button" disabled={!quote.enabled} aria-describedby="catalog-quote-guidance" onClick={quote.requestQuote}>Solicitar orçamento <span aria-hidden="true">↗</span></button>
-          <p id="catalog-quote-guidance" className="ts-quote-guidance">{quote.enabled ? quote.contact.prefilled ? 'A mensagem será aberta no WhatsApp.' : 'Copie a mensagem e cole na conversa do Instagram.' : 'Selecione pelo menos uma peça para solicitar um orçamento.'}</p>
+          <button ref={quoteRef} className="ts-button ts-button--wine ts-quote-action" type="button" disabled={!quote.enabled || quote.processing} aria-busy={quote.processing} aria-describedby="catalog-quote-guidance" onClick={(event) => { if (event.detail < 2) void quote.requestQuote() }}>Solicitar orçamento pelo Instagram <span aria-hidden="true">{quote.processing ? <span className="ts-copy-spinner" /> : '↗'}</span></button>
+          <p id="catalog-quote-guidance" className="ts-quote-guidance">{!quote.destination ? 'O Direct do Instagram está indisponível. Tente novamente mais tarde.' : quote.enabled ? 'Vamos copiar sua seleção e abrir o Instagram. Cole a mensagem no Direct.' : 'Selecione pelo menos uma peça para enviar sua solicitação.'}</p>
           {!storageAvailable && <small>O armazenamento da sessão está indisponível. A seleção permanece disponível nesta página.</small>}
         </footer>
         <div className="ts-sr-only" role="status" aria-live="polite" aria-atomic="true"><span key={announcement.version}>{announcement.message}</span></div>
+        <ManualCopyDialog message={quote.manualMessage} status={quote.manualStatus} destination={quote.destination} processing={quote.processing} triggerRef={quoteRef} onCopy={quote.copyManualMessage} onClose={quote.closeManualDialog} />
       </div>
     </dialog>
   )

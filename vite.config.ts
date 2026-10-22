@@ -9,6 +9,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        adminCatalog: fileURLToPath(new URL('./admin/catalogo/index.html', import.meta.url)),
+        adminLogin: fileURLToPath(new URL('./admin/login/index.html', import.meta.url)),
         landing3: fileURLToPath(new URL('./landing3/index.html', import.meta.url)),
         landing1: fileURLToPath(new URL('./prototipos/landing1/index.html', import.meta.url)),
         landing2: fileURLToPath(new URL('./prototipos/landing2/index.html', import.meta.url)),

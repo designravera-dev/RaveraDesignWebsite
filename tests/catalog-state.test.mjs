@@ -148,6 +148,14 @@ test('meaningful story is appended with preserved internal line breaks and Unico
   assert.equal(buildQuoteMessage(catalogProducts.slice(0, 1), 'História '.repeat(10000)).split('Minha história:\n')[1], 'História '.repeat(10000).trim())
 })
 
+test('message ignores unnamed products and deduplicates trimmed names in selection order', () => {
+  const first = catalogProducts[1]
+  const second = catalogProducts[0]
+  const products = [first, { name: ' \n ' }, { name: null }, second, { name: ` ${first.name} ` }]
+  assert.equal(buildQuoteMessage(products, ''), buildQuoteMessage([first, second], ''))
+  assert.equal(buildQuoteMessage([{ name: undefined }, { name: '' }], 'História'), '')
+})
+
 test('quotation uses the official configured channel; WhatsApp helper safely encodes complete text', () => {
   assert.equal(WHATSAPP_NUMBER, '')
   const message = buildQuoteMessage(catalogProducts.slice(0, 2), 'Flores & nomes?\n+ "Memória" 🌸')

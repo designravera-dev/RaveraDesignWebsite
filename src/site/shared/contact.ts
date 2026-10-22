@@ -1,6 +1,6 @@
 export const INSTAGRAM_HANDLE = 'ravera.designn'
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}/`
-export const INSTAGRAM_DM_URL = `https://ig.me/m/${INSTAGRAM_HANDLE}`
+export const INSTAGRAM_DM_URL = INSTAGRAM_HANDLE.trim() ? `https://ig.me/m/${INSTAGRAM_HANDLE.trim()}` : ''
 
 // Usar somente o número oficial, com código do país, quando for fornecido.
 // Sem número configurado, o orçamento reutiliza a conversa do Instagram.

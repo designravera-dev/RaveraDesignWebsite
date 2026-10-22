@@ -8,8 +8,6 @@ import useSectionReveal from '../shared/useSectionReveal'
 import CatalogSection from '../catalog/CatalogSection'
 import './landing3.css'
 
-const marqueeWords = ['Buquês de noiva', 'Lembranças de bebê', 'Relógios', 'Mesas', 'Bandejas', 'Xadrez', 'Dominó', 'Tábuas', 'Personalização']
-
 // Contorno irregular inspirado na borda das peças dela (porta-joias e bandejas
 // com beirada "mordida" e filete dourado). Soma de senoides sobre um círculo:
 // frequências baixas deformam o todo, as altas fazem o recorte fino da borda.
@@ -187,19 +185,9 @@ export default function LandingThree() {
                 src="/ravera/landing3/lembranca-noiva-barbara.webp"
                 alt="Noiva segurando uma peça em resina com o nome Bárbara em dourado"
               />
-              <p className="ts-hero-art-caption"><span>Eternização</span> flor, nome e data em resina</p>
             </div>
           </div>
 
-          <div className="ts-marquee" aria-hidden="true">
-            <div className="ts-marquee-track">
-              {[0, 1].map((copy) => (
-                <div key={copy} className="ts-marquee-group">
-                  {marqueeWords.map((word) => <span key={word}>{word}<i /></span>)}
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section id="origem" className="ts-origin" aria-labelledby="ts-origin-title">
