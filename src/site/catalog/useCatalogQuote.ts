@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { INSTAGRAM_DM_URL } from '../shared/contact'
-import { catalogById } from './catalogData'
+import { fetchProducts } from './catalogService'
 import { buildQuoteMessage } from './catalogQuote'
 import { useCatalogSelection } from './catalogSelectionContext'
 import { copyMessageToClipboard } from './copyMessageToClipboard'
@@ -16,10 +16,21 @@ export type CopyFeedback = { message: string; blocked: boolean; version: number 
 
 export default function useCatalogQuote() {
   const { selectedProductIds, story, ready } = useCatalogSelection()
+  const [allProducts, setAllProducts] = useState<any[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const data = await fetchProducts()
+      setAllProducts(data)
+    }
+    load()
+  }, [])
+
   const products = selectedProductIds.flatMap((id) => {
-    const product = catalogById.get(id)
+    const product = allProducts.find(p => p.id === id)
     return product && typeof product.name === 'string' && product.name.trim() ? [product] : []
   })
+
   const destination = INSTAGRAM_DM_URL
   const enabled = ready && products.length > 0 && Boolean(destination)
   const [processing, setProcessing] = useState(false)
@@ -57,8 +68,6 @@ export default function useCatalogQuote() {
     const currentOperation = ++operation.current
     setProcessing(true)
     setFeedback(null)
-    // Start copying while this document still has focus, then reserve the tab
-    // synchronously in the same click. Neither operation waits for the other.
     const copyAttempt = copyMessageToClipboard(message)
     reservedTab.current = reserveInstagramTab()
     try {

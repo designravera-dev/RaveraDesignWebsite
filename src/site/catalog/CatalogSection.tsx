@@ -1,9 +1,31 @@
-import { catalogProducts } from './catalogData'
+import { useEffect, useState } from 'react'
+import { fetchProducts } from './catalogService'
+import type { CatalogProduct } from './catalogTypes'
 import { CATALOG_PATH, productHref } from './catalogRoutes'
 import CatalogImage from './CatalogImage'
 import './catalog.css'
 
 export default function CatalogSection() {
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true)
+      try {
+        const data = await fetchProducts()
+        setProducts(data)
+      } catch (err) {
+        console.error('Error loading preview products:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  if (!isLoading && products.length === 0) return null
+
   return (
     <section id="catalogo" className="ts-catalog-intro ts-dark" aria-labelledby="ts-catalog-intro-title">
       <div className="ts-container">
@@ -18,8 +40,8 @@ export default function CatalogSection() {
           </div>
         </div>
         <ul className="ts-catalog-preview">
-          {catalogProducts.slice(0, 3).map((product, index) => (
-            <li key={product.id} data-reveal>
+          {products.slice(0, 5).map((product, index) => (
+            <li key={product.id}>
               <a href={productHref(product.id)}>
                 <div className="ts-catalog-preview-image"><CatalogImage image={product.image} /></div>
                 <div className="ts-catalog-preview-caption">

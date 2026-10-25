@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import RaveraLogo from '../shared/RaveraLogo'
+import { useAuth } from '../shared/AuthContext'
 import '../landing3/landing3.css'
 import './adminLogin.css'
 
@@ -10,12 +11,14 @@ function emailError(value: string, typeMismatch = false) {
 }
 
 export default function AdminLoginPage() {
+  const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [emailTypeMismatch, setEmailTypeMismatch] = useState(false)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [touched, setTouched] = useState({ email: false, password: false })
-  const [accessUnavailable, setAccessUnavailable] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const emailMessage = touched.email ? emailError(email, emailTypeMismatch) : ''
@@ -27,12 +30,14 @@ export default function AdminLoginPage() {
     return () => { document.title = previousTitle }
   }, [])
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (accessUnavailable) return
     setTouched({ email: true, password: true })
+    setAuthError('')
+
     const typeMismatch = emailRef.current?.validity.typeMismatch ?? false
     setEmailTypeMismatch(typeMismatch)
+
     if (emailError(email, typeMismatch)) {
       emailRef.current?.focus()
       return
@@ -41,8 +46,20 @@ export default function AdminLoginPage() {
       passwordRef.current?.focus()
       return
     }
-    // Esta etapa valida somente a interface; não autentica nem inicia uma sessão.
-    setAccessUnavailable(true)
+
+    setIsSubmitting(true)
+    try {
+      const { error } = await signIn(email, password)
+      if (error) {
+        setAuthError('E-mail ou senha incorretos.')
+      } else {
+        window.location.href = '/admin'
+      }
+    } catch (e) {
+      setAuthError('Ocorreu um erro ao tentar fazer login.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -78,7 +95,6 @@ export default function AdminLoginPage() {
                 onChange={(event) => {
                   setEmail(event.target.value)
                   setEmailTypeMismatch(event.target.validity.typeMismatch)
-                  setAccessUnavailable(false)
                 }}
               />
               {emailMessage && <p className="ts-admin-login-error" id="admin-email-error" aria-live="polite">{emailMessage}</p>}
@@ -97,12 +113,12 @@ export default function AdminLoginPage() {
                   spellCheck={false}
                   required
                   value={password}
+                  placeholder="Digite sua senha"
                   aria-invalid={Boolean(passwordMessage)}
                   aria-describedby={passwordMessage ? 'admin-password-error' : undefined}
                   onBlur={() => setTouched((current) => ({ ...current, password: true }))}
                   onChange={(event) => {
                     setPassword(event.target.value)
-                    setAccessUnavailable(false)
                   }}
                 />
                 <button
@@ -122,10 +138,22 @@ export default function AdminLoginPage() {
               {passwordMessage && <p className="ts-admin-login-error" id="admin-password-error" aria-live="polite">{passwordMessage}</p>}
             </div>
 
+            {authError && (
+              <div className="ts-admin-login-error" style={{ textAlign: 'center', marginBottom: '1rem', color: '#ff4d4d' }}>
+                {authError}
+              </div>
+            )}
+
             <div className="ts-admin-login-action">
-              <button className="ts-button ts-button--wine ts-admin-login-submit" type="submit" disabled={accessUnavailable} aria-describedby={accessUnavailable ? 'admin-login-status' : undefined}>Entrar</button>
+              <button
+                className="ts-button ts-button--wine ts-admin-login-submit"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
+              </button>
               <div className="ts-admin-login-status" role="status" aria-atomic="true">
-                {accessUnavailable && <p id="admin-login-status">O acesso à área administrativa estará disponível em breve.</p>}
+                {/* Removed accessUnavailable message as it's now real */}
               </div>
             </div>
           </form>

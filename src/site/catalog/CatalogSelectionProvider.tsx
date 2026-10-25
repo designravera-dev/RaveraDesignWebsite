@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
-import { catalogById } from './catalogData'
 import { CatalogSelectionContext } from './catalogSelectionContext'
 import { selectionReducer, type SelectionAction } from './catalogSelectionReducer'
 import { emptySelection, readSelection, writeSelection } from './catalogStorage'
+import { fetchProducts } from './catalogService'
 import type { CatalogSelectionDraft } from './catalogTypes'
-
-const validIds = new Set(catalogById.keys())
 
 type SelectionState = { selection: CatalogSelectionDraft; ready: boolean; storageAvailable: boolean }
 type Action = SelectionAction | { type: 'restore'; selection: CatalogSelectionDraft; available: boolean } | { type: 'storage-status'; available: boolean }
@@ -22,8 +20,13 @@ export default function CatalogSelectionProvider({ children }: { children: React
   const [announcement, setAnnouncement] = useState({ message: '', version: 0 })
 
   useEffect(() => {
-    const stored = readSelection(validIds)
-    dispatch({ type: 'restore', selection: stored.selection, available: stored.available })
+    const init = async () => {
+      // We no longer use a static validIds set.
+      // We read the stored selection and restore it.
+      const stored = readSelection(new Set()) // passing empty set as we don't filter by static list anymore
+      dispatch({ type: 'restore', selection: stored.selection, available: stored.available })
+    }
+    init()
   }, [])
 
   useEffect(() => {
@@ -35,19 +38,16 @@ export default function CatalogSelectionProvider({ children }: { children: React
   }, [])
 
   const add = useCallback((productId: string) => {
-    const product = catalogById.get(productId)
-    if (!product || selectedProductIds.includes(productId)) return
+    if (selectedProductIds.includes(productId)) return
     dispatch({ type: 'add', productId })
-    announce(`${product.name} adicionada à seleção.`)
+    announce('Produto adicionado à seleção.')
   }, [announce, selectedProductIds])
 
   const setStory = useCallback((text: string) => dispatch({ type: 'story', story: text }), [])
 
   const remove = useCallback((productId: string) => {
-    const product = catalogById.get(productId)
-    if (!product) return
     dispatch({ type: 'remove', productId })
-    announce(`${product.name} removida da seleção.`)
+    announce('Produto removido da seleção.')
   }, [announce])
 
   const clear = useCallback(() => {

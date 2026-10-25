@@ -5,24 +5,24 @@ export const LEGACY_SELECTION_STORAGE_KEY = 'ravera:catalog-selection:v1'
 
 export const emptySelection = (): CatalogSelectionDraft => ({ selectedProductIds: [], story: '' })
 
-function validProductIds(value: unknown, validIds: ReadonlySet<string>): string[] {
+function validProductIds(value: unknown): string[] {
   if (!Array.isArray(value)) return []
-  return [...new Set(value.filter((id): id is string => typeof id === 'string' && validIds.has(id)))]
+  return [...new Set(value.filter((id): id is string => typeof id === 'string'))]
 }
 
-export function validateSelection(value: unknown, validIds: ReadonlySet<string>): CatalogSelectionDraft {
+export function validateSelection(value: unknown): CatalogSelectionDraft {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return emptySelection()
   const draft = value as Record<string, unknown>
   return {
-    selectedProductIds: validProductIds(draft.selectedProductIds, validIds),
+    selectedProductIds: validProductIds(draft.selectedProductIds),
     story: typeof draft.story === 'string' ? draft.story : '',
   }
 }
 
-export function migrateLegacySelection(value: unknown, validIds: ReadonlySet<string>): CatalogSelectionDraft {
+export function migrateLegacySelection(value: unknown): CatalogSelectionDraft {
   if (!Array.isArray(value)) return emptySelection()
   const ids = value.flatMap((entry) => entry && typeof entry === 'object' ? [entry.productId] : [])
-  return { selectedProductIds: validProductIds(ids, validIds), story: '' }
+  return { selectedProductIds: validProductIds(ids), story: '' }
 }
 
 export function writeSelection(selection: CatalogSelectionDraft): boolean {
@@ -39,7 +39,7 @@ export function writeSelection(selection: CatalogSelectionDraft): boolean {
   }
 }
 
-export function readSelection(validIds: ReadonlySet<string>): { selection: CatalogSelectionDraft; available: boolean } {
+export function readSelection(): { selection: CatalogSelectionDraft; available: boolean } {
   if (typeof window === 'undefined') return { selection: emptySelection(), available: false }
   try {
     const storage = window.sessionStorage
@@ -47,7 +47,7 @@ export function readSelection(validIds: ReadonlySet<string>): { selection: Catal
     if (raw !== null) {
       try {
         const parsed: unknown = JSON.parse(raw)
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return { selection: validateSelection(parsed, validIds), available: true }
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return { selection: validateSelection(parsed), available: true }
       } catch {
         // Tentar a migração antiga se o conteúdo atual não puder ser lido.
       }
@@ -62,7 +62,7 @@ export function readSelection(validIds: ReadonlySet<string>): { selection: Catal
       storage.removeItem(LEGACY_SELECTION_STORAGE_KEY)
       return { selection: emptySelection(), available: true }
     }
-    const selection = migrateLegacySelection(parsed, validIds)
+    const selection = migrateLegacySelection(parsed)
     return { selection, available: writeSelection(selection) }
   } catch {
     return { selection: emptySelection(), available: false }

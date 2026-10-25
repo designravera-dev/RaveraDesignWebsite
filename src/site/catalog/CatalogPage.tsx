@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { INSTAGRAM_URL } from '../shared/contact'
 import '../landing3/landing3.css'
 import SiteHeader from '../shared/SiteHeader'
 import SiteFooter from '../shared/SiteFooter'
 import useSectionReveal from '../shared/useSectionReveal'
 import CatalogSelectionProvider from './CatalogSelectionProvider'
-import { catalogProducts, catalogById } from './catalogData'
+import { fetchProducts, fetchProductById } from './catalogService'
+import type { CatalogProduct } from './catalogTypes'
 import { CATALOG_PATH } from './catalogRoutes'
 import CatalogImage from './CatalogImage'
 import ProductCard from './ProductCard'
@@ -15,12 +16,43 @@ import './catalog.css'
 
 export default function CatalogPage({ productSlug }: { productSlug?: string }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const product = productSlug ? catalogById.get(productSlug) : undefined
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [product, setProduct] = useState<CatalogProduct | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
   useSectionReveal(rootRef)
 
   useEffect(() => {
-    document.title = `${product?.name ?? 'Catálogo'} — RAVERA | Peças autorais de design`
-  }, [product])
+    async function loadData() {
+      setIsLoading(true)
+      try {
+        if (productSlug) {
+          const p = await fetchProductById(productSlug)
+          setProduct(p)
+        } else {
+          const ps = await fetchProducts()
+          setProducts(ps)
+        }
+      } catch (e) {
+        console.error('Failed to load catalog data:', e)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [productSlug])
+
+  useEffect(() => {
+    document.title = `${product?.name ?? (products[0]?.name ?? 'Catálogo')} — RAVERA | Peças autorais de design`
+  }, [product, products])
+
+  if (isLoading) {
+    return (
+      <div style={{ backgroundColor: '#381F2E', color: 'white', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Jost, sans-serif' }}>
+        <p>Carregando catálogo...</p>
+      </div>
+    )
+  }
 
   return (
     <CatalogSelectionProvider>
@@ -57,8 +89,8 @@ export default function CatalogPage({ productSlug }: { productSlug?: string }) {
                 </div>
               </section>
               <section id="catalogo-pecas" className="ts-container ts-catalog-collection" aria-label="Peças do catálogo">
-                <div className="ts-catalog-index"><p className="ts-kicker">Peças autorais</p><span>{catalogProducts.length} {catalogProducts.length === 1 ? 'peça' : 'peças'}</span></div>
-                {catalogProducts.length ? <div className="ts-catalog-grid">{catalogProducts.map((item, index) => <ProductCard key={item.id} product={item} index={index} />)}</div> : <p className="ts-catalog-no-products">Nenhuma peça no catálogo no momento.</p>}
+                <div className="ts-catalog-index"><p className="ts-kicker">Peças autorais</p><span>{products.length} {products.length === 1 ? 'peça' : 'peças'}</span></div>
+                {products.length ? <div className="ts-catalog-grid">{products.map((item, index) => <ProductCard key={item.id} product={item} index={index} />)}</div> : <p className="ts-catalog-no-products">Nenhuma peça no catálogo no momento.</p>}
               </section>
             </>
           )}

@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type RefObject } from 'react'
-import { catalogById } from './catalogData'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { fetchProducts } from './catalogService'
 import { useCatalogSelection } from './catalogSelectionContext'
 import LeafIcon from './LeafIcon'
 import SelectionItem from './SelectionItem'
@@ -7,6 +7,7 @@ import SelectionClearAction from './SelectionClearAction'
 import useCatalogQuote from './useCatalogQuote'
 import CopyStatusToast from './CopyStatusToast'
 import ManualCopyDialog from './ManualCopyDialog'
+import type { CatalogProduct } from './catalogTypes'
 
 export default function SelectionDrawer({ open, onClose, leafRef }: { open: boolean; onClose: () => void; leafRef: RefObject<HTMLButtonElement | null> }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -14,6 +15,15 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
   const quoteRef = useRef<HTMLButtonElement>(null)
   const { selectedProductIds, story, setStory, selectedCount, storageAvailable, announcement } = useCatalogSelection()
   const quote = useCatalogQuote()
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const data = await fetchProducts()
+      setProducts(data)
+    }
+    load()
+  }, [])
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current
@@ -96,7 +106,7 @@ export default function SelectionDrawer({ open, onClose, leafRef }: { open: bool
           {selectedCount ? (
             <ul className="ts-selection-list">
               {selectedProductIds.map((id) => {
-                const product = catalogById.get(id)
+                const product = products.find(p => p.id === id)
                 return product ? <SelectionItem key={id} product={product} /> : null
               })}
             </ul>
